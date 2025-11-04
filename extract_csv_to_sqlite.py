@@ -28,49 +28,45 @@ def create_tables(conn):
     cursor.execute('DROP TABLE IF EXISTS employees')
     cursor.execute('DROP TABLE IF EXISTS departments')
     
-    # Department table
+    # Department table - no primary key to allow duplicates
     cursor.execute('''
         CREATE TABLE departments (
-            "Department_ID" TEXT PRIMARY KEY,
+            "Department_ID" TEXT,
             "Department_Name" TEXT,
             "DOE" TEXT
         )
     ''')
     
-    # Employee table - note: "Employee ID" has a space
+    # Employee table - no primary key to allow duplicates
     cursor.execute('''
         CREATE TABLE employees (
-            "Employee ID" TEXT PRIMARY KEY,
+            "Employee ID" TEXT,
             "DOB" TEXT,
             "DOJ" TEXT,
-            "Department_ID" TEXT,
-            FOREIGN KEY ("Department_ID") REFERENCES departments("Department_ID")
+            "Department_ID" TEXT
         )
     ''')
     
-    # Student Counseling table
+    # Student Counseling table - no primary key to allow duplicates
     cursor.execute('''
         CREATE TABLE student_counseling (
-            "Student_ID" TEXT PRIMARY KEY,
+            "Student_ID" TEXT,
             "DOA" TEXT,
             "DOB" TEXT,
             "Department_Choices" TEXT,
-            "Department_Admission" TEXT,
-            FOREIGN KEY ("Department_Admission") REFERENCES departments("Department_ID")
+            "Department_Admission" TEXT
         )
     ''')
     
     # Student Performance table - note: "Semster_Name" is misspelled in CSV
     cursor.execute('''
         CREATE TABLE student_performance (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
             "Student_ID" TEXT,
             "Semster_Name" TEXT,
             "Paper_ID" TEXT,
             "Paper_Name" TEXT,
             "Marks" INTEGER,
-            "Effort_Hours" INTEGER,
-            FOREIGN KEY ("Student_ID") REFERENCES student_counseling("Student_ID")
+            "Effort_Hours" INTEGER
         )
     ''')
     
@@ -91,7 +87,8 @@ def import_csv_to_table(conn, csv_file, table_name):
         placeholders = ','.join(['?' for _ in columns])
         column_names = ','.join([f'"{col}"' for col in columns])  # Quote column names
         
-        insert_query = f'INSERT OR REPLACE INTO {table_name} ({column_names}) VALUES ({placeholders})'
+        # Use INSERT to preserve all records including duplicates
+        insert_query = f'INSERT INTO {table_name} ({column_names}) VALUES ({placeholders})'
         
         row_count = 0
         for row in csv_reader:
